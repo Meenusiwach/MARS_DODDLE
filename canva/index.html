@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #FFD966;
+      text-align: center;
+      
+    }
+    canvas {
+      border: 2px solid #000;
+      background-color: #fcf9f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Paint Canvas</h1>
+  <canvas id="paintCanvas" width="800" height="400"></canvas>
+  <div>
+    <label for="brushSize">Brush Size:</label>
+    <input type="range" id="brushSize" min="1" max="20" step="1" value="5">
+  </div>
+  <div>
+    <label for="colorPicker">Color:</label>
+    <input type="color" id="colorPicker" value="#000000">
+  </div>
+  <div>
+    <button id="clearButton">Clear</button>
+    <button id="undoButton">Undo</button>
+    <button id="redoButton">Redo</button>
+    <button id="saveButton">Save</button>
+  </div>
+  <div>
+    <label for="shapeSelector">Draw Shape:</label>
+    <select id="shapeSelector">
+      <option value="freehand">Freehand</option>
+      <option value="circle">Circle</option>
+      <option value="rectangle">Rectangle</option>
+      <option value="triangle">Triangle</option>
+      <option value="trapezium">Trapezium</option>
+    </select>
+    <label for="shapeColor">Shape Color:</label>
+    <input type="color" id="shapeColor" value="#FF5733">
+    <button id="drawShapeButton">Draw Shape</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('paintCanvas');
+    const ctx = canvas.getContext('2d');
+    const brushSize = document.getElementById('brushSize');
+    const colorPicker = document.getElementById('colorPicker');
+    const clearButton = document.getElementById('clearButton');
+    const undoButton = document.getElementById('undoButton');
+    const redoButton = document.getElementById('redoButton');
+    const saveButton = document.getElementById('saveButton');
+    const shapeSelector = document.getElementById('shapeSelector');
+    const shapeColor = document.getElementById('shapeColor');
+    const drawShapeButton = document.getElementById('drawShapeButton');
+    const drawingStack = [];
+    let currentStep = -1;
+    let isDrawing = false;
+
+    let prevX, prevY;
+    let startX, startY;
+    let shapePath = []; // Stores the points of the shape
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDrawing);
+    canvas.addEventListener('mouseout', endDrawing);
+
+    clearButton.addEventListener('click', clearCanvas);
+    undoButton.addEventListener('click', undo);
+    redoButton.addEventListener('click', redo);
+    saveButton.addEventListener('click', saveCanvas);
+    drawShapeButton.addEventListener('click', drawShape);
+
+    function startDrawing(e) {
+      isDrawing = true;
+      prevX = e.clientX - canvas.offsetLeft;
+      prevY = e.clientY - canvas.offsetTop;
+
+      if (shapeSelector.value !== 'freehand') {
+        startX = prevX;
+        startY = prevY;
+        shapePath = [];
+        shapePath.push({ x: startX, y: startY });
+      }
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+
+      const x = e.clientX - canvas.offsetLeft;
+      const y = e.clientY - canvas.offsetTop;
+
+      ctx.lineWidth = brushSize.value;
+      ctx.strokeStyle = colorPicker.value;
+      ctx.lineCap = 'round';
+
+      if (shapeSelector.value === 'freehand') {
+        ctx.beginPath();
+        ctx.moveTo(prevX, prevY);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        ctx.closePath();
+      } else {
+        shapePath.push({ x, y });
+        redrawShape(shapePath);
+      }
+
+      prevX = x;
+      prevY = y;
+    }
+
+    function endDrawing() {
+      if (isDrawing) {
+        if (shapeSelector.value === 'freehand') {
+          saveDrawing();
+        } else {
+          saveShape();
+        }
+
+        isDrawing = false;
+      }
+    }
+
+    function saveDrawing() {
+      if (currentStep < drawingStack.length - 1) {
+        drawingStack.splice(currentStep + 1);
+      }
+      drawingStack.push(canvas.toDataURL());
+      currentStep++;
+    }
+
+    function saveShape() {
+      if (shapePath.length > 1) {
+        saveDrawing();
+      }
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      saveDrawing();
+    }
+
+    function undo() {
+      if (currentStep > 0) {
+        currentStep--;
+        const img = new Image();
+        img.src = drawingStack[currentStep];
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+        };
+      }
+    }
+
+    function redo() {
+      if (currentStep < drawingStack.length - 1) {
+        currentStep++;
+        const img = new Image();
+        img.src = drawingStack[currentStep];
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+        };
+      }
+    }
+
+    function drawShape() {
+      if (shapeSelector.value !== 'freehand' && shapePath.length > 1) {
+        saveShape();
+      }
+    }
+
+    function redrawShape(path) {
+      const color = shapeColor.value;
+
+      if (shapeSelector.value === 'circle' && path.length > 1) {
+        const radius = Math.sqrt(Math.pow(path[path.length - 1].x - path[0].x, 2) + Math.pow(path[path.length - 1].y - path[0].y, 2));
+        drawCircle(path[0].x, path[0].y, radius, color);
+      } else if (shapeSelector.value === 'rectangle' && path.length > 1) {
+        const width = path[path.length - 1].x - path[0].x;
+        const height = path[path.length - 1].y - path[0].y;
+        drawRectangle(path[0].x, path[0].y, width, height, color);
+      } else if (shapeSelector.value === 'triangle' && path.length > 2) {
+        const [p1, p2, p3] = path;
+        drawTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, color);
+      } else if (shapeSelector.value === 'trapezium' && path.length > 3) {
+        const [p1, p2, p3, p4] = path;
+        drawTrapezium(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, p4.x, p4.y, color);
+      }
+    }
+
+    function drawCircle(x, y, radius, color) {
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function drawRectangle(x, y, width, height, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, width, height);
+    }
+
+    function drawTriangle(x1, y1, x2, y2, x3, y3, color) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x3, y3);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function drawTrapezium(x1, y1, x2, y2, x3, y3, x4, y4, color) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x3, y3);
+      ctx.lineTo(x4, y4);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function saveCanvas() {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = 'my_drawing.png';
+      link.click();
+    }
+  </script>
+</body>
+</html>
