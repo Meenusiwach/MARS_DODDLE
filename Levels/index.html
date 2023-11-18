@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/slevel.css">
+    <title>Game Levels</title>
+</head>
+<body>
+    <div class="levels-container">
+        <!-- Level boxes (replace with your own content) -->
+        <div class="level-box" onclick="redirectToLevel(1)">Level 1</div>
+        <div class="level-box" onclick="redirectToLevel(2)">Level 2</div>
+        <div class="level-box" onclick="redirectToLevel(3)">Level 3</div>
+        <div class="level-box" onclick="redirectToLevel(4)">Level 4</div>
+
+        <div class="level-box2" onclick="redirectToLevel(5)">Level 5</div>
+        <div class="level-box2" onclick="redirectToLevel(6)">Level 6</div>
+        <div class="level-box2" onclick="redirectToLevel(7)">Level 7</div>
+        <div class="level-box2" onclick="redirectToLevel(8)">Level 8</div>
+    </div>
+<script>
+
+
+function redirectToLevel(level) {
+        if (level === 3) {
+            window.location.href = 'puzzle3.html'; // Redirect to puzzle3.html for Level 3
+        } 
+    }
+</script>
+</body>
+</html>
