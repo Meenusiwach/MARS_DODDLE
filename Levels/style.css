@@ -1,0 +1,90 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    
+    align-items: center;
+    margin: 0;
+            padding: 0;
+            background-image: url('marsi.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+}
+
+.levels-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-items: center;
+    height: 100vh;
+}
+
+.level-box {
+    width: 150px;
+    height: 150px;
+    background-color: #872341;
+    color: #fff;
+    text-align: center;
+    line-height: 100px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+    margin: auto;
+    overflow: hidden;
+}
+
+.level-box:hover {
+    background-color: #FBD6D2;
+    transform: scale(1.1);
+}
+
+.level-box2 {
+    width: 150px;
+    height: 150px;
+    background-color: #872341;
+    color: #fff;
+    text-align: center;
+    line-height: 100px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease-in-out, transform 0.2s ease-in-out;
+    margin: auto;
+    overflow: hidden;
+}
+
+.level-box2:hover {
+    background-color: #FBD6D2;
+    transform: scale(1.1);
+}
+
+/* Additional Styling */
+h1 {
+    color: #fff;
+    text-align: center;
+    padding-top: 30px;
+}
+
+/* Space-themed design */
+/* body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('marsi.jpg') center/cover no-repeat;
+    z-index: -1;
+} */
+
+.levels-container::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7));
+    z-index: -1;
+}
