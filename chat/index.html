@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>chat page</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <!-- <h1>chatting page</h1> -->
+    <div class="container">
+        <div id="messages" class ="chat"></div>
+        <div class="sendchat">
+            <input type="text" id="message" placeholder="Guess the paint"/>
+            <button id="sendBtn">send</button>
+        </div>
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const sendBtn = document.getElementById("sendBtn");
+        const messageInput = document.getElementById("message");
+        const allMessages = document.getElementById('messages');
+        let scores = {};
+        const wordsToGuess = ['tree', 'arrow', 'saturn', 'wheel', 'apple'];
+        let guessedWords = [];
+
+        socket.on("message", (data) => {
+            const { user, message } = data;
+            const p = document.createElement('p');
+            p.innerText = `${user}: ${message}`;
+            allMessages.appendChild(p);
+
+            const guessedWord = getGuessedWord(message);
+            if (guessedWord) {
+                if (!guessedWords.includes(guessedWord)) {
+                    guessedWords.push(guessedWord);
+
+                    if (guessedWords.length === wordsToGuess.length) {
+                        // All words are guessed, determine the winner
+                        const winner = getWinner();
+                        alert(`Game over! Winner: ${winner}`);
+                    }
+
+                    // Assign 50 points for a correct guess
+                    scores[user] = (scores[user] || 0) + 50;
+
+                    // Display the updated score in the message box
+                    messageInput.value = `Your score: ${scores[user]} points`;
+
+                    // Display the updated leaderboard
+                    updateLeaderboard();
+                } else {
+                    // Word already guessed, notify the user
+                    messageInput.value = "You already guessed that word!";
+                }
+            }
+        });
+
+        sendBtn.addEventListener("click", () => {
+            const message = messageInput.value;
+            const user = getUserType(message);
+
+            socket.emit("user-message", { user, message });
+        });
+
+        function getUserType(message) {
+            // Add your logic to determine user type based on a fixed word
+            // For example, if the message contains the word "paint", consider it as a specific user type
+            return message.toLowerCase().includes("paint") ? "Painter" : "Regular";
+        }
+
+        function getGuessedWord(message) {
+            // Check if the message contains any of the specified words
+            const words = message.toLowerCase().split(' ');
+            for (const word of words) {
+                if (wordsToGuess.includes(word)) {
+                    return word;
+                }
+            }
+            return null;
+        }
+
+        function updateLeaderboard() {
+            // Display the updated leaderboard
+            const leaderboard = document.createElement('div');
+            leaderboard.innerHTML = "<h2>Leaderboard</h2>";
+
+            // Sort and display the leaderboard
+            const sortedLeaderboard = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+
+            sortedLeaderboard.forEach(([user, score]) => {
+                const leaderboardItem = document.createElement('p');
+                leaderboardItem.innerText = `${user}: ${score} points`;
+                leaderboard.appendChild(leaderboardItem);
+            });
+
+            // Update the leaderboard container
+            const container = document.getElementById('leaderboard');
+            container.innerHTML = '';
+            container.appendChild(leaderboard);
+        }
+
+        function getWinner() {
+            // Determine the winner based on the highest score
+            const winner = Object.entries(scores).reduce((prev, current) => {
+                return prev[1] > current[1] ? prev : current;
+            }, []);
+
+            return winner[0];
+        }
+    </script>
+</body>
+</html>
